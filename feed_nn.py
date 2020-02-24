@@ -90,7 +90,7 @@ class Tools:
         return np_array_calculate.reshape(-1, 1)
 
     @staticmethod
-    def train_set_batch_split(train, batch_size):
+    def train_set_batch_split(train, batch_size):  # has not been finished!!!!!!!!!!
         data_size = train.shape[0]
         print(data_size)
         print(batch_size)
