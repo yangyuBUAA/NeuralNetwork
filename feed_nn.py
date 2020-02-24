@@ -13,7 +13,7 @@ class ActivateFunction:
         if self.activateName == 'sigmoid':
             return 1/(1 + math.pow(math.e, -x))
         elif self.activateName == 'ReLU':
-            pass
+            return max(x, 0)
         elif self.activateName == 'Tanh':
             pass
 
@@ -21,7 +21,10 @@ class ActivateFunction:
         if self.activateName == 'sigmoid':
             return (1/(1 + math.pow(math.e, -x))) * (1-(1/(1 + math.pow(math.e, -x))))
         elif self.activateName == 'ReLU':
-            pass
+            if x > 0:
+                return 1
+            else:
+                return 0
         elif self.activateName == 'Tanh':
             pass
 
@@ -239,21 +242,32 @@ class FeedNeuralNetwork:
         self._accumulate_bias = []
 
     def train(self, train, learning_rate, activate_func, loss_func, batch_size, epoch_size):
+        """
+        network's training function
+        :param train: train_Set(np.ndarray)
+        :param learning_rate:
+        :param activate_func:
+        :param loss_func:
+        :param batch_size:
+        :param epoch_size:
+        :return:
+        """
         train_set = Tools.train_set_batch_split(train, batch_size)
         for epoch in range(epoch_size):
             print('epoch: ' + str(epoch))
-            for each in train_set:
+            for each in train_set:  # train_set has been transformed to many batch
                 x = each[:, :-1]
                 y = each[:, -1]
                 for line in range(x.shape[0]):
-                    self.forward(x[line], activate_func)
-                    self.backward(y[line], activate_func, loss_func)
-                    self.calculate_delta(x[line])
-                self.update_params(learning_rate)
+                    self.forward(x[line], activate_func)  # reset self._forward, then calculate forward params
+                    self.backward(y[line], activate_func, loss_func)  # reset self._back_error,then calculate error
+                    self.calculate_delta(x[line])  # calculate batch_size gradient'summary
+                self.update_params(learning_rate)  # update network parameters,then reset self._accumulate
 
     def test(self):
-        self.forward(np.array([0.1, 0.3, 0.7]), 'sigmoid')
+        self.forward(np.array([0.1, 0.3, 0.7]), 'ReLU')
         print(self._forward_a)
+
 
 class DatasetGeneration:
     @staticmethod
@@ -267,9 +281,9 @@ class DatasetGeneration:
 
 if __name__ == '__main__':
     train_set = np.array([[0.1, 0.3, 0.7, 1.5], [0.2, 0.5, 0.1, 1.5], [0.8, 0.2, 0.5, 1]])
-    net = FeedNeuralNetwork(3, [3, 3, 1])
+    net = FeedNeuralNetwork(4, [3, 3, 3, 1])
     net.show_model_params()
-    net.train(train_set, 0.1, 'sigmoid', 'MSE', 1, 30000)
+    net.train(train_set, 0.1, 'ReLU', 'MSE', 1, 10000)
     net.show_model_params()
     net.test()
 
@@ -279,7 +293,6 @@ if __name__ == '__main__':
     # train_x = train_set[:, :3]
     # train_y = train_set[:, 3].reshape(-1, 1)
     # # print(train_x.shape, train_y.shape)
-
 
     # net.forward(train_x[0], 'sigmoid')
     # net.backward(train_y[0], 'sigmoid', 'MSE')
